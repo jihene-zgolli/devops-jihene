@@ -26,11 +26,36 @@ jobs:
         cd app
         python test_app.py
         echo "Tests passes avec succes !"
+  verification-code:
+    name: Verification du code
+    runs-on: ubuntu-latest
+    needs: tests
 
+    steps:
+    - name: Recuperer le code
+      uses: actions/checkout@v3
+
+    - name: Verifier app.py
+      run: |
+        # 1. Vérifier que app/app.py existe
+        if [ -f app/app.py ]; then
+            echo "✅ app.py existe"
+        else
+            echo "❌ app.py introuvable"
+            exit 1
+        fi
+
+        # 2. Compter les lignes — tu connais cette commande !
+        LIGNES=$(wc -l <  app/app.py)
+        echo "Nombre de lignes : $LIGNES"
+
+        # 3. Afficher résumé
+        echo "Verification terminee avec succes !"
+       
   build-docker:
     name: Build image Docker
     runs-on: ubuntu-latest
-    needs: tests
+    needs: [tests, verification-code]
 
     steps:
     - name: Recuperer le code
