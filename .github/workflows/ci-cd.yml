@@ -1,0 +1,62 @@
+name: Pipeline CI/CD Jihene
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  tests:
+    name: Tests automatiques
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Recuperer le code
+      uses: actions/checkout@v3
+
+    - name: Installer Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Lancer les tests
+      run: |
+        cd app
+        python test_app.py
+        echo "Tests passes avec succes !"
+
+  build-docker:
+    name: Build image Docker
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+    - name: Recuperer le code
+      uses: actions/checkout@v3
+
+    - name: Connexion Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build et Push image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: jihenezgolli/devops-jihene:latest
+
+  notification:
+    name: Notification fin pipeline
+    runs-on: ubuntu-latest
+    needs: build-docker
+
+    steps:
+    - name: Pipeline termine
+      run: |
+        echo "Pipeline CI/CD termine avec succes !"
+        echo "Image jihene-zgolli/devops-jihene:latest disponible"
+        echo "Pret pour deploiement Kubernetes"
